@@ -56,7 +56,6 @@ app.post("/students", (req, res) => {
       mobile,
       address,
       gender,
-      password, // Assuming you added password field to the table
       dateEntered,
       module1,
       module1Marks,
@@ -85,7 +84,6 @@ app.post("/students", (req, res) => {
         mobile,
         address,
         gender,
-        password,
         dateEntered,
         module1,
         module1Marks,
