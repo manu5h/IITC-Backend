@@ -127,29 +127,24 @@ app.get("/students", (req, res) => {
   });
 });
 
-// Add a new module
-app.post("/modules", (req, res) => {
-  console.log("Received a POST request to /modules");
+// Add a course module
+app.post('/course-modules', (req, res) => {
   const { moduleName, moduleCode, dateEntered } = req.body;
 
-  const sql = `INSERT INTO CourseModule (ModuleName, ModuleCode, DateEntered)
-               VALUES (?, ?, ?)`;
+  const sql = `INSERT INTO CourseModule (ModuleName, ModuleCode, DateEntered) VALUES (?, ?, ?)`;
 
-  db.query(
-    sql,
-    [moduleName, moduleCode, dateEntered],
-    (err, result) => {
-      if (err) {
-        console.error("Error adding module: ", err);
-        res.status(500).send("Error adding module");
-        return;
-      }
-
-      console.log("Module added successfully");
-      res.status(200).json({ message: "Module added successfully" });
+  db.query(sql, [moduleName, moduleCode, dateEntered], (err, result) => {
+    if (err) {
+      console.error('Error adding course module: ', err);
+      res.status(500).send('Error adding course module');
+      return;
     }
-  );
+
+    console.log('Course module added successfully');
+    res.status(200).json({ message: 'Course module added successfully' });
+  });
 });
+
 
 // Add a new course
 app.post("/courses", (req, res) => {
