@@ -127,6 +127,96 @@ app.get("/students", (req, res) => {
   });
 });
 
+// Get student details by ID
+app.get('/students/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = 'SELECT * FROM StudentDetailsTable WHERE id = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('Error fetching student details:', err);
+      res.status(500).send('Error fetching student details');
+      return;
+    }
+    res.json(result[0]);
+  });
+});
+
+// Get modules list
+app.get('/modules', (req, res) => {
+  const sql = 'SELECT * FROM ModulesListTable';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching modules list:', err);
+      res.status(500).send('Error fetching modules list');
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Get modules assigned to course
+app.get('/modules/assigned', (req, res) => {
+  const sql = 'SELECT * FROM ModulesAssignedTable';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching modules assigned to course:', err);
+      res.status(500).send('Error fetching modules assigned to course');
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Update student details
+app.put('/students/:id', (req, res) => {
+  const { id } = req.params;
+  const {
+    courseYear,
+    moduleId,
+    module1,
+    module1Marks,
+    module2,
+    module2Marks,
+    module3,
+    module3Marks,
+    dropout,
+    finalExamSitted,
+    repeatStudent
+  } = req.body;
+
+  const sql = `UPDATE StudentDetailsTable 
+               SET CourseYear = ?, ModuleId = ?, Module1 = ?, Module1Marks = ?, Module2 = ?, Module2Marks = ?, 
+                   Module3 = ?, Module3Marks = ?, Dropout = ?, FinalExamSitted = ?, RepeatStudent = ?
+               WHERE id = ?`;
+
+  db.query(
+    sql,
+    [
+      courseYear,
+      moduleId,
+      module1,
+      module1Marks,
+      module2,
+      module2Marks,
+      module3,
+      module3Marks,
+      dropout,
+      finalExamSitted,
+      repeatStudent,
+      id
+    ],
+    (err, result) => {
+      if (err) {
+        console.error('Error updating student details:', err);
+        res.status(500).send('Error updating student details');
+        return;
+      }
+      res.status(200).json({ message: 'Student details updated successfully' });
+    }
+  );
+});
+
+
 // Add a course module
 app.post('/course-modules', (req, res) => {
   const { moduleName, moduleCode, dateEntered } = req.body;
