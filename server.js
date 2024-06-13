@@ -47,8 +47,8 @@ app.get("/", (req, res) => {
 // Register student
 app.post("/students", (req, res) => {
     const {
-      courseYear = null,
-      courseId = null,
+      courseYear,
+      courseId,
       fullName,
       nameWithInitials,
       NIC,
@@ -58,22 +58,20 @@ app.post("/students", (req, res) => {
       gender,
       password, // Assuming you added password field to the table
       dateEntered,
-      module1 = null,
-      module1Marks = null,
-      module2 = null,
-      module2Marks = null,
-      module3 = null,
-      module3Marks = null,
-      dropout = null,
-      finalExamSitted = null,
-      repeatStudent = null,
+      module1,
+      module1Marks,
+      module2,
+      module2Marks,
+      module3,
+      module3Marks,
+      dropout,
+      finalExamSitted,
+      repeatStudent,
     } = req.body;
   
-    const sql = `
-      INSERT INTO StudentDetailsTable 
+    const sql = `INSERT INTO StudentDetailsTable 
       (CourseYear, CourseId, FullName, NameWithInitials, NIC, MISNumber, Mobile, Address, Gender, Password, DateEntered, Module1, Module1Marks, Module2, Module2Marks, Module3, Module3Marks, Dropout, FinalExamSitted, RepeatStudent)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   
     db.query(
       sql,
@@ -87,7 +85,7 @@ app.post("/students", (req, res) => {
         mobile,
         address,
         gender,
-        null, // Assuming Password is null or not provided in the request body
+        password,
         dateEntered,
         module1,
         module1Marks,
@@ -97,12 +95,13 @@ app.post("/students", (req, res) => {
         module3Marks,
         dropout,
         finalExamSitted,
-        repeatStudent
+        repeatStudent,
       ],
       (err, result) => {
         if (err) {
           console.error("Error adding student: ", err);
-          return res.status(500).json({ message: "Error adding student", error: err.sqlMessage });
+          res.status(500).send("Error adding student");
+          return;
         }
   
         console.log("Student added successfully");
@@ -110,7 +109,6 @@ app.post("/students", (req, res) => {
       }
     );
   });
-  
   
 
 // Retrieve all student data
@@ -129,25 +127,29 @@ app.get("/students", (req, res) => {
   });
 });
 
-// Add a course module
-app.post("/course-modules", (req, res) => {
-    const { moduleName, moduleCode, dateEntered } = req.body;
+// Add a new module
+app.post("/modules", (req, res) => {
+  console.log("Received a POST request to /modules");
+  const { moduleName, moduleCode, dateEntered } = req.body;
 
-    const sql = `INSERT INTO CourseModule (ModuleName, ModuleCode, DateEntered)
-                 VALUES (?, ?, ?)`;
+  const sql = `INSERT INTO CourseModule (ModuleName, ModuleCode, DateEntered)
+               VALUES (?, ?, ?)`;
 
-    db.query(sql, [moduleName, moduleCode, dateEntered], (err, result) => {
+  db.query(
+    sql,
+    [moduleName, moduleCode, dateEntered],
+    (err, result) => {
       if (err) {
-        console.error("Error adding course module: ", err);
-        res.status(500).send("Error adding course module");
+        console.error("Error adding module: ", err);
+        res.status(500).send("Error adding module");
         return;
       }
 
-      console.log("Course module added successfully");
-      res.status(200).json({ message: "Course module added successfully" });
-    });
+      console.log("Module added successfully");
+      res.status(200).json({ message: "Module added successfully" });
+    }
+  );
 });
-
 
 // Add a new course
 app.post("/courses", (req, res) => {
