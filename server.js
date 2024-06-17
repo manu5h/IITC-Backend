@@ -45,57 +45,80 @@ app.get("/", (req, res) => {
 });
 
 // Register student
+
+function getNextId(callback) {  //get last id and create new id
+  const sql = 'SELECT ID FROM StudentDetailsTable ORDER BY ID DESC LIMIT 1';
+  
+  db.query(sql, (err, result) => {
+      if (err) {
+          console.error('Error fetching last ID: ', err);
+          return callback(err, null);
+      }
+      
+      const lastId = result.length > 0 ? parseInt(result[0].ID, 10) : 0;
+      const nextId = (lastId + 1).toString().padStart(4, '0');
+      callback(null, nextId);
+  });
+}
+
 app.post("/students", (req, res) => {
     const {
-      courseYear,
-      courseId,
-      fullName,
-      nameWithInitials,
+      CourseYear,
+      CourseID,
+      FullName,
+      NameWithInitials,
       NIC,
       MISNumber,
-      mobile,
-      address,
-      gender,
-      password, 
-      dateEntered,
-      module1,
-      module1Marks,
-      module2,
-      module2Marks,
-      module3,
-      module3Marks,
-      dropout,
-      finalExamSitted,
-      repeatStudent,
+      Mobile,
+      Address,
+      Gender,
+      Password, 
+      DateEntered,
+      Module1,
+      Module1Marks,
+      Module2,
+      Module2Marks,
+      Module3,
+      Module3Marks,
+      Dropout,
+      FinalExamSitted,
+      RepeatStudent,
     } = req.body;
+
+    getNextId((err, nextId) => {
+      if (err) {
+          res.status(500).send("Error generating new ID");
+          return;
+      }
   
     const sql = `INSERT INTO StudentDetailsTable 
-      (CourseYear, CourseId, FullName, NameWithInitials, NIC, MISNumber, Mobile, Address, Gender, Password, DateEntered, Module1, Module1Marks, Module2, Module2Marks, Module3, Module3Marks, Dropout, FinalExamSitted, RepeatStudent)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      (ID, CourseYear, CourseID, FullName, NameWithInitials, NIC, MISNumber, Mobile, Address, Gender, Password, DateEntered, Module1, Module1Marks, Module2, Module2Marks, Module3, Module3Marks, Dropout, FinalExamSitted, RepeatStudent)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   
     db.query(
       sql,
       [
-        courseYear,
-        courseId,
-        fullName,
-        nameWithInitials,
+        nextId,
+        CourseYear,
+        CourseID,
+        FullName,
+        NameWithInitials,
         NIC,
         MISNumber,
-        mobile,
-        address,
-        gender,
-        password,
-        dateEntered,
-        module1,
-        module1Marks,
-        module2,
-        module2Marks,
-        module3,
-        module3Marks,
-        dropout,
-        finalExamSitted,
-        repeatStudent,
+        Mobile,
+        Address,
+        Gender,
+        Password,
+        DateEntered,
+        Module1,
+        Module1Marks,
+        Module2,
+        Module2Marks,
+        Module3,
+        Module3Marks,
+        Dropout,
+        FinalExamSitted,
+        RepeatStudent,
       ],
       (err, result) => {
         if (err) {
@@ -109,6 +132,7 @@ app.post("/students", (req, res) => {
       }
     );
   });
+});
   
 
 // Retrieve all student data
@@ -236,28 +260,54 @@ app.post('/course-modules', (req, res) => {
 });
 
 
-// Add a new course
+// Function to get the next CD_ID for CourseDetailsTable
+function getNextId(callback) {
+  const sql = 'SELECT CD_ID FROM CourseDetailsTable ORDER BY CD_ID DESC LIMIT 1';
+  
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('Error fetching last CD_ID: ', err);
+      return callback(err, null);
+    }
+    
+    const lastId = result.length > 0 ? parseInt(result[0].CD_ID, 10) : 0;
+    const nextId = (lastId + 1).toString().padStart(4, '0');
+    callback(null, nextId);
+  });
+}
+
+// Endpoint to add a new course
 app.post("/courses", (req, res) => {
   console.log("Received a POST request to /courses");
   const { courseName, courseType, duration, medium, courseLevel, moduleCode, active, dateEntered, user } = req.body;
 
-  const sql = `INSERT INTO CourseDetailsTable (CourseName, CourseType, Duration, Medium, CourseLevel, ModuleCode, Active, DateEntered, User)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-  db.query(
-    sql,
-    [courseName, courseType, duration, medium, courseLevel, moduleCode, active, dateEntered, user],
-    (err, result) => {
-      if (err) {
-        console.error("Error adding course: ", err);
-        res.status(500).send("Error adding course");
-        return;
-      }
-
-      console.log("Course added successfully");
-      res.status(200).json({ message: "Course added successfully" });
+  // Call getNextId to get the next CD_ID
+  getNextId((err, nextId) => {
+    if (err) {
+      console.error("Error getting next CD_ID: ", err);
+      res.status(500).send("Error adding course");
+      return;
     }
-  );
+
+    // SQL query to insert new course with generated CD_ID
+    const sql = `INSERT INTO CourseDetailsTable (CD_ID, CourseName, CourseType, Duration, Medium, CourseLevel, ModuleCode, Active, DateEntered, User)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    db.query(
+      sql,
+      [nextId, courseName, courseType, duration, medium, courseLevel, moduleCode, active, dateEntered, user],
+      (err, result) => {
+        if (err) {
+          console.error("Error adding course: ", err);
+          res.status(500).send("Error adding course");
+          return;
+        }
+
+        console.log("Course added successfully");
+        res.status(200).json({ message: "Course added successfully" });
+      }
+    );
+  });
 });
 
 // Retrieve all course details
