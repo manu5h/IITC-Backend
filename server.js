@@ -9,7 +9,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-    origin: 'http://localhost:4200', // Adjust this to match your frontend URL
+    origin: 'http://localhost:4200', 
     methods: 'GET,POST,PUT,DELETE',
     credentials: true,
     optionsSuccessStatus: 200
@@ -44,101 +44,74 @@ app.get("/", (req, res) => {
   res.send("Welcome to the IITC backend!");
 });
 
-// generate next ID
-function getNextId(callback) {
-  const sql = 'SELECT ID FROM studentDetailsTable ORDER BY ID DESC LIMIT 1';
+
+
+// Function to get the next ID for StudentDetailsTable
+function getNextId_(callback) {
+  const sql = 'SELECT ID FROM StudentDetailsTable ORDER BY ID DESC LIMIT 1';
   
   db.query(sql, (err, result) => {
-      if (err) {
-          console.error('Error fetching last ID: ', err);
-          return callback(err, null);
-      }
-      
-      const lastId = result.length > 0 ? parseInt(result[0].ID, 10) : 0;
-      console.log('Last ID fetched from database:');
-
-      const nextId = (lastId + 1).toString().padStart(4, '0');
-      callback(null, nextId);
+    if (err) {
+      console.error('Error fetching last ID: ', err);
+      return callback(err, null);
+    }
+    
+    const lastId = result.length > 0 ? parseInt(result[0].ID, 10) : 0;
+    const nextId = (lastId + 1).toString().padStart(4, '0');
+    callback(null, nextId);
   });
 }
 
-// Register student
+// Endpoint to add a new student
 app.post("/students", (req, res) => {
-  const {
-      CourseYear,
-      CourseID,
-      FullName,
-      NameWithInitials,
-      NIC,
-      MISNumber,
-      Mobile,
-      Address,
-      Gender,
-      Password, 
-      DateEntered,
-      Module1,
-      Module1Marks,
-      Module2,
-      Module2Marks,
-      Module3,
-      Module3Marks,
-      Dropout,
-      FinalExamSitted,
-      RepeatStudent,
-  } = req.body;
+  console.log("Received a POST request to /students");
+  const {CourseYear,
+    CourseID,
+    FullName,
+    NameWithInitials,
+    NIC,
+    MISNumber,
+    Mobile,
+    Address,
+    Gender,
+    DateEntered,
+    Module1,
+    Module1Marks,
+    Module2,
+    Module2Marks,
+    Module3,
+    Module3Marks,
+    Dropout,
+    FinalExamSitted,
+    RepeatStudent, } = req.body;
 
-  getNextId((err, nextId) => {
-      if (err) {
-          res.status(500).send("Error generating new ID");
+    // Call getNextId to get the next CD_ID
+  getNextId_((err, nextId) => {
+    if (err) {
+      console.error("Error getting next ID: ", err);
+      res.status(500).send("Error adding student");
+      return;
+    }
+
+    // SQL query to insert new student with generated CD_ID
+    const sql = `INSERT INTO StudentDetailsTable (ID, CourseYear, CourseID, FullName, NameWithInitials, NIC, MISNumber, Mobile, Address, Gender, DateEntered, Module1, Module1Marks, Module2, Module2Marks, Module3, Module3Marks, Dropout, FinalExamSitted, RepeatStudent)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+db.query(
+      sql,
+      [nextId, CourseYear, CourseID, FullName, NameWithInitials, NIC, MISNumber, Mobile, Address, Gender, DateEntered, Module1, Module1Marks, Module2, Module2Marks, Module3, Module3Marks, Dropout, FinalExamSitted, RepeatStudent],
+      (err, result) => {
+        if (err) {
+          console.error("Error adding student: ", err);
+          res.status(500).send("Error adding student");
           return;
+        }
+
+        console.log("student added successfully");
+        res.status(200).json({ message: "student added successfully" });
       }
-
-      // Current timestamp formatted for MySQL datetime format
-    const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
-
-      const sql = `INSERT INTO StudentDetailsTable 
-          (ID, CourseYear, CourseID, FullName, NameWithInitials, NIC, MISNumber, Mobile, Address, Gender, Password, DateEntered, Module1, Module1Marks, Module2, Module2Marks, Module3, Module3Marks, Dropout, FinalExamSitted, RepeatStudent)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-      db.query(
-          sql,
-          [
-              nextId,
-              CourseYear,
-              CourseID,
-              FullName,
-              NameWithInitials,
-              NIC,
-              MISNumber,
-              Mobile,
-              Address,
-              Gender,
-              Password,
-              currentDate,
-              Module1,
-              Module1Marks,
-              Module2,
-              Module2Marks,
-              Module3,
-              Module3Marks,
-              Dropout,
-              FinalExamSitted,
-              RepeatStudent,
-          ],
-          (err, result) => {
-              if (err) {
-                  console.error("Error adding student: ", err);
-                  res.status(500).send("Error adding student");
-                  return;
-              }
-
-              console.log("Student added successfully");
-              res.status(200).json({ message: "Student added successfully", studentId: nextId});
-          }
-      );
+    );
   });
 });
-
 
 // Retrieve all student data
 app.get("/students", (req, res) => {
